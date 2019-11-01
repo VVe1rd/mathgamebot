@@ -18,7 +18,7 @@ def read_channel_id():
 
 token = read_token()
 channel_id = int(read_channel_id())
-version = 1009
+version = 1013
 
 class Player():
     def __init__(self, id, gold, user):
@@ -58,15 +58,15 @@ class MyClient(discord.Client):
         for elem in self.players:
             if elem.gold == max_gold:
                 winners.append(elem)
-        await channel.send('Игра окончена!')
+        await channel.send('Game over!')
         for elem in self.players:
             await channel.send(str(elem.id) + ') ' + '{}'.format(elem.user.mention) + ' - ' + str(elem.gold))
         if len(winners) > 1:
-            await channel.send('Победители:')
+            await channel.send('The winners:')
             for elem in winners:
                 await channel.send('{}'.format(elem.user.mention))
         else:
-            await channel.send('Победитель: {}!'.format(winners[0].user.mention))
+            await channel.send('The winner: {}!'.format(winners[0].user.mention))
         self.players = []
 
     async def gold_exchange(self):
@@ -110,16 +110,16 @@ class MyClient(discord.Client):
                 await self.game_over()
                 return
             await self.gold_exchange()
-            await channel.send('День ' + str(self.day) + '/' + str(self.max_day))
+            await channel.send('Round ' + str(self.day) + '/' + str(self.max_day))
             for elem in self.players:
                 player_state = str(elem.id) + ') ' + '{}'.format(elem.user.mention) + ' - ' + str(elem.gold)
                 if self.day > 1:
-                    player_state += ' (выбрал ' + str(elem.target) + ')'
+                    player_state += ' (has chosen ' + str(elem.target) + ')'
                 await channel.send(player_state)
             for elem in self.players:
                 elem.target = 0
             await asyncio.sleep(30)
-            await channel.send('Осталось 30 секунд...')
+            await channel.send('30 seconds left...')
             await asyncio.sleep(30)
 
     async def get_player(self, message: discord.Message):
@@ -141,23 +141,23 @@ class MyClient(discord.Client):
 
             elif message.content == '!start' and self.state == 'none':
                 self.state = 'ready'
-                await channel.send('Присоединяйтесь к игре командой !play')
-                await channel.send('Игра начнется через одну минуту...')
+                await channel.send('Type !play to participate the game')
+                await channel.send('Game will start in one minute...')
                 await asyncio.sleep(30)
-                await channel.send('Осталось 30 секунд до начала игры... Успевайте присоединиться!')
+                await channel.send('30 seconds left... Hurry up to join!')
                 await asyncio.sleep(30)
                 self.state = 'game'
                 self.max_day = 0
                 for elem in self.players:
                     self.max_day += elem.vote
                 self.max_day = self.max_day // len(self.players)
-                await channel.send('Игра началась!')
+                await channel.send('Game has started!')
                 self.loop.create_task(self.change_phase())
 
             elif message.content == '!play' and self.state == 'ready':
                 player = Player(len(self.players) + 1, 1000, message.author)
                 self.players.append(player)
-                await channel.send('{0.author.mention} присоединился к игре!'.format(message))
+                await channel.send('{0.author.mention} joined the game!'.format(message))
 
             elif message.content.startswith('!vote ') and self.state == 'ready':
                 await self.vote(message)
@@ -171,18 +171,18 @@ class MyClient(discord.Client):
                 if author is None:
                     return
                 if author.target > 0:
-                    await message.author.send('Вы уже выбрали жертву.')
+                    await message.author.send('You have already chosen a victim.')
                     return
                 if message.content.isdigit():
                     if 1 <= int(message.content) <= len(self.players):
                         if int(message.content) == author.id:
-                            await message.author.send('Вы не можете выбрать себя! Попробуйте еще раз')
+                            await message.author.send('You can not target yourself! Please try again.')
                             return
                         author.target = int(message.content)
                         self.players[author.target - 1].thieves.append(author)
-                        await message.author.send('Вы выбрали {} в качестве жертвы.'.format(self.players[author.target - 1].user.name))
+                        await message.author.send('You have chosen {} as your victim.'.format(self.players[author.target - 1].user.name))
                     else:
-                        await message.author.send('Неправильный ID игрока! Попробуйте еще раз.')
+                        await message.author.send('Wrong player ID! Please try again.')
 
     async def vote(self, message: discord.Message):
         channel = self.get_channel(channel_id)
@@ -193,9 +193,9 @@ class MyClient(discord.Client):
                 if author is None:
                     return
                 author.vote = int(rhs)
-                await channel.send('{}, голос засчитан!'.format(message.author.mention))
+                await channel.send('{}, your vote has been counted!'.format(message.author.mention))
             else:
-                await channel.send('{}, число не входит в диапазон!'.format(message.author.mention))
+                await channel.send('{}, the number does not match range'.format(message.author.mention))
 
     async def show_graph(self, message: discord.Message):
         channel = self.get_channel(channel_id)

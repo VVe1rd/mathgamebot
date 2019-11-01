@@ -18,7 +18,7 @@ def read_channel_id():
 
 token = read_token()
 channel_id = int(read_channel_id())
-version = 1012
+version = 1013
 
 class Player():
     def __init__(self, id, gold, user):
@@ -93,7 +93,7 @@ class MyClient(discord.Client):
             graph.add_node(node)
         for elem in self.players:
             for thief in elem.thieves:
-                edge = pydotplus.Edge(thief.user.name, elem.user.name)
+                edge = pydotplus.Edge(thief.user.nick, elem.user.nick)
                 graph.add_edge(edge)
         graph.write_png('day' + str(self.day) + '.png')
         await channel.send(file=discord.File('day' + str(self.day) + '.png'))
@@ -155,6 +155,9 @@ class MyClient(discord.Client):
                 self.loop.create_task(self.change_phase())
 
             elif message.content == '!play' and self.state == 'ready':
+                author = await self.get_player(message)
+                if author is not None:
+                    return
                 player = Player(len(self.players) + 1, 1000, message.author)
                 self.players.append(player)
                 await channel.send('{0.author.mention} joined the game!'.format(message))
